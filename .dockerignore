@@ -1,0 +1,10 @@
+**/target
+**/build
+**/.gradle
+**/.idea
+**/local.properties
+**/datos
+firma-demo
+entrega
+.git
+**/keystore.properties
