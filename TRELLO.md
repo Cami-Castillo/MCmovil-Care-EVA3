@@ -15,3 +15,4 @@ Crea listas Por hacer, En curso, Finalizado. No marques como propia una tarea si
 | Documentar README y preparar defensa | Ambas | Commits de cada una |
 
 Las asignaciones son propuestas, no evidencia de trabajo ya realizado. Registra fechas y resultado reales; agrega issues cuando detectes un error y enlaza la corrección.
+https://trello.com/invite/b/6ae4ffddc2bc7eb93d4276db/ATTI865d194472a7a40cd9d85e717654b5051F571A9A/eva3dam 
