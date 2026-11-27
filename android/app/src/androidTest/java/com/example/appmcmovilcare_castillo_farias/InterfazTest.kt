@@ -19,15 +19,39 @@ import org.junit.Rule
 class InterfazTest {
     @get:Rule val compose = createComposeRule()
 
+
     @Test
     fun inicioMuestraContadoresReales(): Unit =
         compose.run {
             setContent {
                 AppMCmovilCare_Castillo_FariasTheme {
-                    Dashboard(CareState(equipos = listOf(Equipo(id = "1"))), {}, {}, {})
+                    Dashboard(
+                        CareState(
+                            equipos = listOf(Equipo(id = "1"))
+                        ),
+                        {},
+                        {},
+                        {}
+                    )
                 }
             }
-            onNodeWithText("1 equipos").performScrollTo().assertIsDisplayed()
+
+            onNodeWithText("Equipo registrado")
+                .performScrollTo()
+                .assertIsDisplayed()
+
+            onNodeWithText("1")
+                .assertIsDisplayed()
+
+            onNodeWithText("Atenciones registradas")
+                .assertIsDisplayed()
+
+            onNodeWithText("0")
+                .assertIsDisplayed()
+
+            onNodeWithText("0 autorizaciones pendientes")
+                .performScrollTo()
+                .assertIsDisplayed()
         }
 
     @Test
