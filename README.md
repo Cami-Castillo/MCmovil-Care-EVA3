@@ -9,7 +9,6 @@ MVP académico del seguimiento del ciclo de vida de equipos: app Android (Kotlin
 - Alejandrina Farias
 - Camila Castillo
 
-Equipo N°: _(completar con el número asignado en el curso)_
 
 # 3. Funcionalidades
 
