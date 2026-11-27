@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Errores.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">atenciones</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.atenciones</a> &gt; <span class="el_source">Errores.java</span></div><h1>Errores.java</h1><pre class="source lang-java linenums">package com.mcmovilcare.atenciones;
+
+import java.util.*;
+import org.springframework.http.*;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestControllerAdvice
+<span class="fc" id="L11">public class Errores {</span>
+  @ExceptionHandler(ResponseStatusException.class)
+  ResponseEntity&lt;Map&lt;String, Object&gt;&gt; negocio(ResponseStatusException e) {
+<span class="fc" id="L14">    return ResponseEntity.status(e.getStatusCode()).body(Map.of(&quot;mensaje&quot;, e.getReason()));</span>
+  }
+
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  ResponseEntity&lt;Map&lt;String, Object&gt;&gt; validacion(MethodArgumentNotValidException e) {
+<span class="fc" id="L19">    var m = new TreeMap&lt;String, String&gt;();</span>
+<span class="fc" id="L20">    e.getBindingResult()</span>
+<span class="fc" id="L21">        .getFieldErrors()</span>
+<span class="fc" id="L22">        .forEach(f -&gt; m.putIfAbsent(f.getField(), f.getDefaultMessage()));</span>
+<span class="fc" id="L23">    return ResponseEntity.badRequest().body(Map.of(&quot;mensaje&quot;, &quot;Revisa los campos&quot;, &quot;errores&quot;, m));</span>
+  }
+
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  ResponseEntity&lt;Map&lt;String, Object&gt;&gt; json(Exception e) {
+<span class="fc" id="L28">    return ResponseEntity.badRequest().body(Map.of(&quot;mensaje&quot;, &quot;JSON inválido&quot;));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

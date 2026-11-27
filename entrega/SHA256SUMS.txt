@@ -1,0 +1,2 @@
+57ab86fd2bcc172f626bb45a7c592b03fa90038e7f9d9cd30e6d99d394b8c736  entrega/MCmovilCare-EVA4-release.apk
+e682ee06395249d057523b73c876360307ef5abfb144d4a4c94d0f770dd81987  firma-demo/mccare-academico.jks

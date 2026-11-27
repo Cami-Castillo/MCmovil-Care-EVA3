@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AtencionesController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">atenciones</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.atenciones</a> &gt; <span class="el_source">AtencionesController.java</span></div><h1>AtencionesController.java</h1><pre class="source lang-java linenums">package com.mcmovilcare.atenciones;
+
+import jakarta.validation.Valid;
+import java.net.URI;
+import java.util.*;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+@RestController
+public class AtencionesController {
+  private final AtencionesService s;
+  private final EvidenciasService archivos;
+
+<span class="fc" id="L15">  public AtencionesController(AtencionesService s, EvidenciasService a) {</span>
+<span class="fc" id="L16">    this.s = s;</span>
+<span class="fc" id="L17">    archivos = a;</span>
+<span class="fc" id="L18">  }</span>
+
+  @GetMapping(&quot;/api/salud&quot;)
+  public Map&lt;String, String&gt; salud() {
+<span class="fc" id="L22">    return Map.of(&quot;servicio&quot;, &quot;atenciones&quot;, &quot;estado&quot;, &quot;OK&quot;);</span>
+  }
+
+  @GetMapping(&quot;/api/atenciones&quot;)
+  public List&lt;AtencionEntidad&gt; todos() {
+<span class="fc" id="L27">    return s.todos();</span>
+  }
+
+  @GetMapping(&quot;/api/atenciones/{id}&quot;)
+  public AtencionEntidad uno(@PathVariable Long id) {
+<span class="fc" id="L32">    return s.uno(id);</span>
+  }
+
+  @PostMapping(&quot;/api/atenciones&quot;)
+  public ResponseEntity&lt;AtencionEntidad&gt; crear(
+      @Valid @RequestBody AtencionEntrada d, @RequestAttribute(&quot;rol&quot;) String rol) {
+<span class="fc bfc" id="L38" title="All 2 branches covered.">    if (!rol.equals(&quot;ADMIN&quot;)) {</span>
+<span class="fc" id="L39">      d =</span>
+          new AtencionEntrada(
+<span class="fc" id="L41">              d.equipoId(),</span>
+<span class="fc" id="L42">              d.tipoServicio(),</span>
+<span class="fc" id="L43">              d.descripcion(),</span>
+<span class="fc" id="L44">              d.correoContacto(),</span>
+              &quot;Recibida&quot;,
+<span class="fc" id="L46">              0.0,</span>
+              &quot;Pendiente&quot;,
+              &quot;Pendiente&quot;,
+              &quot;&quot;,
+              &quot;&quot;,
+<span class="fc" id="L51">              d.evidencia());</span>
+    }
+<span class="fc" id="L53">    var a = s.guardar(null, d);</span>
+<span class="fc" id="L54">    return ResponseEntity.created(URI.create(&quot;/api/atenciones/&quot; + a.getId())).body(a);</span>
+  }
+
+  @PutMapping(&quot;/api/atenciones/{id}&quot;)
+  public AtencionEntidad editar(@PathVariable Long id, @Valid @RequestBody AtencionEntrada d) {
+<span class="fc" id="L59">    return s.guardar(id, d);</span>
+  }
+
+  @PatchMapping(&quot;/api/atenciones/{id}/autorizacion&quot;)
+  public AtencionEntidad autorizar(
+      @PathVariable Long id, @Valid @RequestBody AutorizacionEntrada d) {
+<span class="fc" id="L65">    return s.autorizar(id, d);</span>
+  }
+
+  @DeleteMapping(&quot;/api/atenciones/{id}&quot;)
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void eliminar(@PathVariable Long id) {
+<span class="fc" id="L71">    s.eliminar(id);</span>
+<span class="fc" id="L72">  }</span>
+
+  @GetMapping(&quot;/internal/equipos/{id}/en-uso&quot;)
+  public boolean enUso(@PathVariable String id) {
+<span class="fc" id="L76">    return s.enUso(id);</span>
+  }
+
+  @PostMapping(&quot;/api/evidencias&quot;)
+  public Map&lt;String, String&gt; subir(@RequestParam MultipartFile archivo) {
+<span class="fc" id="L81">    return Map.of(&quot;nombre&quot;, archivos.subir(archivo));</span>
+  }
+
+  @GetMapping(&quot;/api/evidencias/{nombre}&quot;)
+  public ResponseEntity&lt;byte[]&gt; imagen(@PathVariable String nombre) {
+<span class="fc" id="L86">    return ResponseEntity.ok()</span>
+<span class="fc" id="L87">        .contentType(MediaType.APPLICATION_OCTET_STREAM)</span>
+<span class="fc" id="L88">        .body(archivos.leer(nombre));</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

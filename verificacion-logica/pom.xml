@@ -1,0 +1,16 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"><modelVersion>4.0.0</modelVersion><parent><groupId>com.mcmovilcare</groupId><artifactId>mccare-eva4</artifactId><version>4.0.0</version></parent><artifactId>verificacion-logica</artifactId><dependencies>
+<dependency><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-stdlib</artifactId></dependency>
+<dependency><groupId>org.jetbrains.kotlinx</groupId><artifactId>kotlinx-coroutines-core-jvm</artifactId><version>1.10.2</version></dependency>
+<dependency><groupId>com.squareup.retrofit2</groupId><artifactId>retrofit</artifactId><version>3.0.0</version></dependency>
+<dependency><groupId>com.squareup.retrofit2</groupId><artifactId>converter-gson</artifactId><version>3.0.0</version></dependency>
+<dependency><groupId>io.kotest</groupId><artifactId>kotest-runner-junit5-jvm</artifactId><version>5.9.1</version><scope>test</scope></dependency>
+<dependency><groupId>io.kotest</groupId><artifactId>kotest-assertions-core-jvm</artifactId><version>5.9.1</version><scope>test</scope></dependency>
+<dependency><groupId>io.mockk</groupId><artifactId>mockk-jvm</artifactId><version>1.14.7</version><scope>test</scope></dependency>
+<dependency><groupId>org.jetbrains.kotlinx</groupId><artifactId>kotlinx-coroutines-test-jvm</artifactId><version>1.10.2</version><scope>test</scope></dependency>
+<dependency><groupId>net.bytebuddy</groupId><artifactId>byte-buddy-agent</artifactId><version>1.17.8</version><scope>test</scope></dependency>
+</dependencies><build><sourceDirectory>${project.basedir}/../logic/src/main/kotlin</sourceDirectory><testSourceDirectory>${project.basedir}/../logic/src/test/kotlin</testSourceDirectory><plugins>
+<plugin><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-maven-plugin</artifactId><version>2.2.21</version><executions><execution><id>compile</id><phase>compile</phase><goals><goal>compile</goal></goals></execution><execution><id>test-compile</id><phase>test-compile</phase><goals><goal>test-compile</goal></goals></execution></executions><configuration><jvmTarget>17</jvmTarget></configuration></plugin>
+<plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><executions><execution><id>agent</id><phase>process-test-classes</phase><goals><goal>copy</goal></goals><configuration><artifactItems><artifactItem><groupId>net.bytebuddy</groupId><artifactId>byte-buddy-agent</artifactId><version>1.17.8</version><outputDirectory>${project.build.directory}</outputDirectory><destFileName>bytebuddy-agent.jar</destFileName></artifactItem></artifactItems></configuration></execution></executions></plugin>
+<plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><configuration><argLine>@{argLine} -javaagent:${project.build.directory}/bytebuddy-agent.jar -Dkotest.framework.classpath.scanning.autoscan.disable=true</argLine></configuration></plugin>
+<plugin><groupId>org.jacoco</groupId><artifactId>jacoco-maven-plugin</artifactId><configuration><excludes><exclude>**/Equipo*</exclude><exclude>**/Atencion*</exclude><exclude>**/Perfil*</exclude><exclude>**/Feriado*</exclude><exclude>**/EstadoAutorizacion*</exclude><exclude>**/ArchivoSubido*</exclude><exclude>**/Datos*</exclude><exclude>**/CareState*</exclude></excludes></configuration></plugin>
+</plugins></build></project>

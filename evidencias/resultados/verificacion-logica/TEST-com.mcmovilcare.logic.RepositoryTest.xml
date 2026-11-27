@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report.xsd" version="3.0.2" name="com.mcmovilcare.logic.RepositoryTest" time="0.433" tests="7" errors="0" skipped="0" failures="0">
+  <testcase name="" classname="com.mcmovilcare.logic.RepositoryTest" time="0.255" />
+  <testcase name="" classname="com.mcmovilcare.logic.RepositoryTest" time="0.015" />
+  <testcase name="" classname="com.mcmovilcare.logic.RepositoryTest" time="0.042" />
+  <testcase name="" classname="com.mcmovilcare.logic.RepositoryTest" time="0.006" />
+  <testcase name="" classname="com.mcmovilcare.logic.RepositoryTest" time="0.044" />
+  <testcase name="" classname="com.mcmovilcare.logic.RepositoryTest" time="0.009" />
+  <testcase name="" classname="com.mcmovilcare.logic.RepositoryTest" time="0.047" />
+</testsuite>

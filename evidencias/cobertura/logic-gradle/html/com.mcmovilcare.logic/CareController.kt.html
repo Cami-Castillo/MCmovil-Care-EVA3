@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CareController.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">logic</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.logic</a> &gt; <span class="el_source">CareController.kt</span></div><h1>CareController.kt</h1><pre class="source lang-java linenums">package com.mcmovilcare.logic
+
+import java.io.IOException
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import retrofit2.HttpException
+
+<span class="fc" id="L8">class CareController(private val repo: CareRepository, private val scope: CoroutineScope) {</span>
+<span class="fc" id="L9">    private val _state = MutableStateFlow(CareState())</span>
+<span class="fc" id="L10">    val state = _state.asStateFlow()</span>
+
+    fun cargar() {
+<span class="pc bpc" id="L13" title="1 of 4 branches missed.">        if (state.value.cargando || state.value.guardando) return</span>
+<span class="fc" id="L14">        _state.update { it.copy(cargando = true, error = null) }</span>
+<span class="fc" id="L15">        scope.launch {</span>
+<span class="fc" id="L16">            try {</span>
+<span class="fc" id="L17">                refrescar()</span>
+<span class="fc" id="L18">                val p = repo.perfil()</span>
+<span class="fc" id="L19">                val d = repo.preferencia()</span>
+<span class="pc bpc" id="L20" title="1 of 2 branches missed.">                _state.update { it.copy(perfil = p, mostrarDiagnosticos = d) }</span>
+<span class="fc" id="L21">            } catch (e: CancellationException) {</span>
+<span class="fc" id="L22">                throw e</span>
+<span class="fc" id="L23">            } catch (e: Exception) {</span>
+<span class="fc" id="L24">                fallo(e)</span>
+            } finally {
+<span class="fc" id="L26">                _state.update { it.copy(cargando = false) }</span>
+            }
+<span class="fc" id="L28">        }</span>
+<span class="fc" id="L29">    }</span>
+
+<span class="fc" id="L31">    private suspend fun refrescar() {</span>
+<span class="fc" id="L32">        val equipos = repo.equipos()</span>
+<span class="fc" id="L33">        val atenciones = repo.atenciones()</span>
+<span class="fc" id="L34">        _state.update {</span>
+<span class="fc" id="L35">            it.copy(</span>
+<span class="fc" id="L36">                equipos = equipos.items,</span>
+<span class="fc" id="L37">                atenciones = atenciones.items,</span>
+<span class="pc bpc" id="L38" title="1 of 4 branches missed.">                offline = equipos.cache || atenciones.cache,</span>
+<span class="fc" id="L39">            )</span>
+        }
+<span class="fc" id="L41">    }</span>
+
+    fun equipo(e: Equipo) {
+<span class="fc" id="L44">        val errores = Validacion.equipo(e)</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">        if (invalido(errores)) return</span>
+<span class="fc" id="L46">        escribir {</span>
+<span class="fc" id="L47">            repo.guardarEquipo(</span>
+<span class="fc" id="L48">                e.copy(</span>
+<span class="fc" id="L49">                    nombre = e.nombre.trim(),</span>
+<span class="fc" id="L50">                    marca = e.marca.trim(),</span>
+<span class="fc" id="L51">                    modelo = e.modelo.trim(),</span>
+<span class="fc" id="L52">                    numeroSerie = e.numeroSerie.trim(),</span>
+<span class="fc" id="L53">                    diagnostico = e.diagnostico.trim(),</span>
+                )
+            )
+<span class="fc" id="L56">        }</span>
+<span class="fc" id="L57">    }</span>
+
+    fun atencion(a: Atencion) {
+<span class="fc" id="L60">        val errores = Validacion.atencion(a, state.value.equipos.map { it.id }.toSet())</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        if (invalido(errores)) return</span>
+<span class="fc" id="L62">        escribir {</span>
+<span class="fc" id="L63">            repo.guardarAtencion(</span>
+<span class="fc" id="L64">                a.copy(descripcion = a.descripcion.trim(), correoContacto = a.correoContacto.trim())</span>
+            )
+<span class="fc" id="L66">        }</span>
+<span class="fc" id="L67">    }</span>
+
+<span class="fc" id="L69">    fun eliminarEquipo(id: String) = escribir { repo.eliminarEquipo(id) }</span>
+
+<span class="fc" id="L71">    fun eliminarAtencion(id: Long) = escribir { repo.eliminarAtencion(id) }</span>
+
+    fun autorizar(id: Long, valor: String) {
+        if (
+<span class="fc bfc" id="L75" title="All 2 branches covered.">            invalido(</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">                if (valor in Validacion.autorizaciones) emptyMap()</span>
+<span class="fc" id="L77">                else mapOf(&quot;autorizacion&quot; to &quot;Valor inválido&quot;)</span>
+            )
+        )
+<span class="fc" id="L80">            return</span>
+<span class="fc" id="L81">        escribir { repo.autorizar(id, valor) }</span>
+<span class="fc" id="L82">    }</span>
+
+    private fun invalido(errores: Map&lt;String, String&gt;): Boolean {
+<span class="fc" id="L85">        _state.update { it.copy(errores = errores) }</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        return errores.isNotEmpty()</span>
+    }
+
+    fun perfil(p: Perfil) {
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (invalido(Validacion.perfil(p))) return</span>
+<span class="fc" id="L91">        escribir(false) {</span>
+<span class="fc" id="L92">            repo.guardarPerfil(p)</span>
+<span class="fc" id="L93">            _state.update { it.copy(perfil = p) }</span>
+<span class="fc" id="L94">        }</span>
+<span class="fc" id="L95">    }</span>
+
+    fun preferencia(valor: Boolean) =
+<span class="fc" id="L98">        escribir(false) {</span>
+<span class="fc" id="L99">            repo.preferencia(valor)</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">            _state.update { it.copy(mostrarDiagnosticos = valor) }</span>
+<span class="fc" id="L101">        }</span>
+
+    fun subir(bytes: ByteArray, resultado: (String) -&gt; Unit) =
+<span class="fc" id="L104">        escribir(false) { resultado(repo.subir(bytes)) }</span>
+
+    fun feriados(year: Int) {
+<span class="fc" id="L107">        scope.launch {</span>
+<span class="fc" id="L108">            try {</span>
+<span class="fc" id="L109">                val lista = repo.feriados(year)</span>
+<span class="fc" id="L110">                _state.update { it.copy(feriados = lista, errorExterno = null) }</span>
+<span class="fc" id="L111">            } catch (e: CancellationException) {</span>
+<span class="fc" id="L112">                throw e</span>
+<span class="fc" id="L113">            } catch (e: Exception) {</span>
+<span class="fc" id="L114">                _state.update {</span>
+<span class="fc" id="L115">                    it.copy(errorExterno = &quot;No se pudo consultar la API externa. Reintenta.&quot;)</span>
+                }
+            }
+<span class="fc" id="L118">        }</span>
+<span class="fc" id="L119">    }</span>
+
+<span class="fc" id="L121">    private fun escribir(refrescar: Boolean = true, accion: suspend () -&gt; Unit) {</span>
+<span class="pc bpc" id="L122" title="1 of 4 branches missed.">        if (state.value.guardando || state.value.cargando) return</span>
+<span class="fc bfc" id="L123" title="All 4 branches covered.">        if (refrescar &amp;&amp; state.value.offline) {</span>
+<span class="fc" id="L124">            _state.update {</span>
+<span class="fc" id="L125">                it.copy(error = &quot;Sin conexión: consulta disponible, cambios deshabilitados&quot;)</span>
+            }
+<span class="fc" id="L127">            return</span>
+        }
+<span class="fc" id="L129">        _state.update { it.copy(guardando = true, error = null, mensaje = null) }</span>
+<span class="fc" id="L130">        scope.launch {</span>
+<span class="fc" id="L131">            try {</span>
+<span class="fc" id="L132">                accion()</span>
+<span class="fc" id="L133">                _state.update {</span>
+<span class="fc" id="L134">                    it.copy(revision = it.revision + 1, mensaje = &quot;Operación guardada&quot;)</span>
+                }
+<span class="fc bfc" id="L136" title="All 2 branches covered.">                if (refrescar)</span>
+<span class="fc" id="L137">                    try {</span>
+<span class="fc" id="L138">                        refrescar()</span>
+<span class="fc" id="L139">                    } catch (e: CancellationException) {</span>
+<span class="fc" id="L140">                        throw e</span>
+<span class="fc" id="L141">                    } catch (e: Exception) {</span>
+<span class="fc" id="L142">                        _state.update {</span>
+<span class="fc" id="L143">                            it.copy(</span>
+                                error =
+<span class="fc" id="L145">                                    &quot;Se guardó, pero no se pudo refrescar. Actualiza antes de repetir.&quot;</span>
+<span class="fc" id="L146">                            )</span>
+                        }
+                    }
+<span class="fc" id="L149">            } catch (e: CancellationException) {</span>
+<span class="fc" id="L150">                throw e</span>
+<span class="fc" id="L151">            } catch (e: Exception) {</span>
+<span class="fc" id="L152">                fallo(e)</span>
+            } finally {
+<span class="fc" id="L154">                _state.update { it.copy(guardando = false) }</span>
+            }
+<span class="fc" id="L156">        }</span>
+<span class="fc" id="L157">    }</span>
+
+    private fun fallo(e: Exception) {
+<span class="fc" id="L160">        val mensaje =</span>
+<span class="fc" id="L161">            when (e) {</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">                is HttpException -&gt;</span>
+<span class="fc bfc" id="L163" title="All 5 branches covered.">                    when (e.code()) {</span>
+<span class="fc" id="L164">                        400 -&gt; &quot;Revisa los datos enviados&quot;</span>
+<span class="fc" id="L165">                        404 -&gt; &quot;El registro ya no existe&quot;</span>
+<span class="fc" id="L166">                        409 -&gt; &quot;No puedes eliminar un equipo con atenciones&quot;</span>
+<span class="fc" id="L167">                        503 -&gt; &quot;El otro microservicio no está disponible&quot;</span>
+<span class="fc" id="L168">                        else -&gt; &quot;Error del servidor HTTP ${e.code()}&quot;</span>
+                    }
+<span class="fc bfc" id="L170" title="All 2 branches covered.">                is IOException -&gt; &quot;No hay conexión. Actualiza antes de repetir un envío.&quot;</span>
+<span class="fc" id="L171">                else -&gt; &quot;No se pudo completar la operación&quot;</span>
+            }
+<span class="fc" id="L173">        _state.update { it.copy(error = mensaje) }</span>
+<span class="fc" id="L174">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

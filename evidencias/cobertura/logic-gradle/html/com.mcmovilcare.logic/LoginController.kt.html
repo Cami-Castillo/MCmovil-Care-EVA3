@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LoginController.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">logic</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.logic</a> &gt; <span class="el_source">LoginController.kt</span></div><h1>LoginController.kt</h1><pre class="source lang-java linenums">package com.mcmovilcare.logic
+
+import java.io.IOException
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import retrofit2.HttpException
+
+<span class="fc" id="L8">data class LoginEstado(</span>
+<span class="fc" id="L9">    val sesion: Sesion? = null,</span>
+<span class="fc" id="L10">    val cargando: Boolean = false,</span>
+<span class="fc" id="L11">    val error: String? = null,</span>
+<span class="fc" id="L12">)</span>
+
+<span class="fc" id="L14">class LoginController(private val api: SesionApi, private val scope: CoroutineScope) {</span>
+<span class="fc" id="L15">    private val _estado = MutableStateFlow(LoginEstado())</span>
+<span class="fc" id="L16">    val estado = _estado.asStateFlow()</span>
+
+    fun entrar(usuario: String, clave: String) {
+<span class="pc bpc" id="L19" title="1 of 4 branches missed.">        if (_estado.value.cargando || _estado.value.sesion != null) return</span>
+<span class="pc bpc" id="L20" title="1 of 4 branches missed.">        if (usuario.isBlank() || clave.isBlank()) {</span>
+<span class="fc" id="L21">            _estado.value = LoginEstado(error = &quot;Completa usuario y contraseña&quot;)</span>
+<span class="fc" id="L22">            return</span>
+        }
+<span class="fc" id="L24">        _estado.value = LoginEstado(cargando = true)</span>
+<span class="fc" id="L25">        scope.launch {</span>
+<span class="fc" id="L26">            try {</span>
+<span class="fc" id="L27">                _estado.value =</span>
+<span class="fc" id="L28">                    LoginEstado(sesion = api.entrar(EntradaSesion(usuario.trim(), clave)))</span>
+<span class="nc" id="L29">            } catch (e: CancellationException) {</span>
+<span class="nc" id="L30">                throw e</span>
+<span class="fc" id="L31">            } catch (e: HttpException) {</span>
+<span class="fc" id="L32">                _estado.value =</span>
+<span class="fc" id="L33">                    LoginEstado(</span>
+                        error =
+<span class="pc bpc" id="L35" title="1 of 2 branches missed.">                            if (e.code() == 401) &quot;Usuario o contraseña incorrectos&quot;</span>
+<span class="nc" id="L36">                            else &quot;El servicio de acceso no está disponible&quot;</span>
+                    )
+<span class="fc" id="L38">            } catch (e: IOException) {</span>
+<span class="fc" id="L39">                _estado.value =</span>
+<span class="fc" id="L40">                    LoginEstado(</span>
+<span class="fc" id="L41">                        error = &quot;No se pudo conectar. Revisa los servicios y vuelve a intentar.&quot;</span>
+                    )
+<span class="nc" id="L43">            } catch (e: Exception) {</span>
+<span class="nc" id="L44">                _estado.value = LoginEstado(error = &quot;No se pudo iniciar sesión.&quot;)</span>
+            }
+<span class="fc" id="L46">        }</span>
+<span class="fc" id="L47">    }</span>
+
+<span class="fc" id="L49">    fun salir(token: String, vencida: Boolean = false) {</span>
+<span class="pc bpc" id="L50" title="1 of 4 branches missed.">        if (_estado.value.sesion?.token != token) return</span>
+<span class="fc" id="L51">        _estado.value =</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">            LoginEstado(error = if (vencida) &quot;La sesión terminó. Vuelve a ingresar.&quot; else null)</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (!vencida)</span>
+<span class="fc" id="L54">            scope.launch {</span>
+<span class="fc" id="L55">                try {</span>
+<span class="fc" id="L56">                    api.salir(&quot;Bearer $token&quot;)</span>
+<span class="nc" id="L57">                } catch (e: CancellationException) {</span>
+<span class="nc" id="L58">                    throw e</span>
+<span class="nc" id="L59">                } catch (_: Exception) {</span>
+                    // El cierre local ya se efectuó; el servidor caduca la sesión si no recibió
+                    // DELETE.
+                }
+<span class="fc" id="L63">            }</span>
+<span class="fc" id="L64">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

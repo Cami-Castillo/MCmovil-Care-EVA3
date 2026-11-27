@@ -1,0 +1,4 @@
+package: name='com.example.appmcmovilcare_castillo_farias.eva4' versionCode='5' versionName='4.1' platformBuildVersionName='15' platformBuildVersionCode='35' compileSdkVersion='35' compileSdkVersionCodename='15'
+sdkVersion:'26'
+targetSdkVersion:'35'
+launchable-activity: name='com.example.appmcmovilcare_castillo_farias.MainActivity'  label='' icon=''

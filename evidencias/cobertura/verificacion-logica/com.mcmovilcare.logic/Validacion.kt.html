@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Validacion.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">verificacion-logica</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.logic</a> &gt; <span class="el_source">Validacion.kt</span></div><h1>Validacion.kt</h1><pre class="source lang-java linenums">package com.mcmovilcare.logic
+
+import java.time.*
+
+object Validacion {
+<span class="nc" id="L6">    val servicios =</span>
+<span class="fc" id="L7">        listOf(&quot;Diagnóstico de falla&quot;, &quot;Mantenimiento preventivo&quot;, &quot;Consulta de garantía&quot;)</span>
+<span class="pc" id="L8">    val estadosEquipo = listOf(&quot;Recibido&quot;, &quot;En revisión&quot;, &quot;Listo&quot;)</span>
+<span class="nc" id="L9">    val estadosAtencion =</span>
+<span class="fc" id="L10">        listOf(&quot;Recibida&quot;, &quot;Diagnóstico&quot;, &quot;Cotizada&quot;, &quot;En reparación&quot;, &quot;Finalizada&quot;)</span>
+<span class="fc" id="L11">    val autorizaciones = listOf(&quot;Pendiente&quot;, &quot;Aprobada&quot;, &quot;Rechazada&quot;)</span>
+<span class="fc" id="L12">    private val email = Regex(&quot;&quot;&quot;^[^\s@]+@[^\s@]+\.[^\s@]+$&quot;&quot;&quot;)</span>
+
+<span class="fc" id="L14">    fun equipo(e: Equipo): Map&lt;String, String&gt; = buildMap {</span>
+<span class="fc" id="L15">        for ((clave, v) in</span>
+<span class="fc bfc" id="L16" title="All 2 branches covered.">            listOf(</span>
+<span class="fc" id="L17">                &quot;nombre&quot; to e.nombre,</span>
+<span class="fc" id="L18">                &quot;marca&quot; to e.marca,</span>
+<span class="fc" id="L19">                &quot;modelo&quot; to e.modelo,</span>
+<span class="fc" id="L20">                &quot;numeroSerie&quot; to e.numeroSerie,</span>
+<span class="fc" id="L21">                &quot;diagnostico&quot; to e.diagnostico,</span>
+<span class="fc bfc" id="L22" title="All 4 branches covered.">            )) if (v.isBlank() || v.trim().length &gt; 200)</span>
+<span class="fc" id="L23">            put(clave, &quot;Completa entre 1 y 200 caracteres&quot;)</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        if (e.estado !in estadosEquipo) put(&quot;estado&quot;, &quot;Estado inválido&quot;)</span>
+<span class="fc" id="L25">    }</span>
+
+<span class="fc" id="L27">    fun atencion(a: Atencion, ids: Set&lt;String&gt;): Map&lt;String, String&gt; = buildMap {</span>
+<span class="fc bfc" id="L28" title="All 2 branches covered.">        if (a.equipoId !in ids) put(&quot;equipoId&quot;, &quot;Selecciona un equipo disponible&quot;)</span>
+<span class="fc bfc" id="L29" title="All 2 branches covered.">        if (a.tipoServicio !in servicios) put(&quot;tipoServicio&quot;, &quot;Servicio inválido&quot;)</span>
+<span class="fc bfc" id="L30" title="All 6 branches covered.">        if (a.descripcion.trim().length !in 15..1000)</span>
+<span class="fc" id="L31">            put(&quot;descripcion&quot;, &quot;Escribe entre 15 y 1000 caracteres&quot;)</span>
+<span class="fc bfc" id="L32" title="All 4 branches covered.">        if (!email.matches(a.correoContacto.trim()) || a.correoContacto.length &gt; 254)</span>
+<span class="fc" id="L33">            put(&quot;correoContacto&quot;, &quot;Correo inválido&quot;)</span>
+<span class="fc bfc" id="L34" title="All 2 branches covered.">        if (a.estado !in estadosAtencion) put(&quot;estado&quot;, &quot;Estado inválido&quot;)</span>
+<span class="fc bfc" id="L35" title="All 8 branches covered.">        if (!a.importe.isFinite() || a.importe &lt; 0 || a.importe &gt; 100000000)</span>
+<span class="fc" id="L36">            put(&quot;importe&quot;, &quot;Monto entre 0 y 100000000&quot;)</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (a.autorizacion !in autorizaciones) put(&quot;autorizacion&quot;, &quot;Autorización inválida&quot;)</span>
+<span class="fc bfc" id="L38" title="All 4 branches covered.">        if (a.informe.isBlank() || a.informe.length &gt; 2000)</span>
+<span class="fc" id="L39">            put(&quot;informe&quot;, &quot;Informe obligatorio, máximo 2000 caracteres&quot;)</span>
+<span class="fc" id="L40">        for ((k, v) in</span>
+<span class="fc bfc" id="L41" title="All 2 branches covered.">            listOf(&quot;garantiaHasta&quot; to a.garantiaHasta, &quot;mantenimiento&quot; to a.mantenimiento)) if (</span>
+<span class="fc bfc" id="L42" title="All 6 branches covered.">            v.isNotBlank() &amp;&amp; runCatching { LocalDate.parse(v) }.isFailure</span>
+        )
+<span class="fc" id="L44">            put(k, &quot;Usa AAAA-MM-DD o deja vacío&quot;)</span>
+<span class="fc" id="L45">    }</span>
+
+<span class="fc" id="L47">    fun perfil(p: Perfil): Map&lt;String, String&gt; = buildMap {</span>
+<span class="fc bfc" id="L48" title="All 6 branches covered.">        if (p.nombre.trim().length !in 3..100) put(&quot;nombre&quot;, &quot;Nombre entre 3 y 100 caracteres&quot;)</span>
+<span class="fc bfc" id="L49" title="All 4 branches covered.">        if (!email.matches(p.correo.trim()) || p.correo.length &gt; 254)</span>
+<span class="fc" id="L50">            put(&quot;correo&quot;, &quot;Correo inválido&quot;)</span>
+<span class="fc bfc" id="L51" title="All 6 branches covered.">        if (p.direccion.trim().length !in 5..200)</span>
+<span class="fc" id="L52">            put(&quot;direccion&quot;, &quot;Dirección entre 5 y 200 caracteres&quot;)</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (!p.aceptaTerminos) put(&quot;terminos&quot;, &quot;Debes aceptar los términos&quot;)</span>
+<span class="fc" id="L54">    }</span>
+
+    fun diaHabil(fecha: LocalDate, feriados: List&lt;Feriado&gt;): LocalDate {
+<span class="fc" id="L57">        val excluidos = feriados.filter { it.global }.map { it.date }.toSet()</span>
+<span class="fc" id="L58">        var dia = fecha</span>
+        while (
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            dia.dayOfWeek == DayOfWeek.SATURDAY ||</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">                dia.dayOfWeek == DayOfWeek.SUNDAY ||</span>
+<span class="fc bfc" id="L62" title="All 2 branches covered.">                dia.toString() in excluidos</span>
+<span class="fc" id="L63">        ) dia = dia.plusDays(1)</span>
+<span class="fc" id="L64">        return dia</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

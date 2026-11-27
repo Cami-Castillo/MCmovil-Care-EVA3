@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CatalogoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">catalogo</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.catalogo</a> &gt; <span class="el_source">CatalogoService.java</span></div><h1>CatalogoService.java</h1><pre class="source lang-java linenums">package com.mcmovilcare.catalogo;
+
+import static org.springframework.http.HttpStatus.*;
+
+import java.util.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.*;
+import org.springframework.web.server.ResponseStatusException;
+
+@Service
+public class CatalogoService {
+  private final EquiposRepo repo;
+  private final RestClient otro;
+
+<span class="fc" id="L16">  public CatalogoService(EquiposRepo r, @Value(&quot;${otro.url}&quot;) String url) {</span>
+<span class="fc" id="L17">    repo = r;</span>
+<span class="fc" id="L18">    var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();</span>
+<span class="fc" id="L19">    factory.setConnectTimeout(3000);</span>
+<span class="fc" id="L20">    factory.setReadTimeout(5000);</span>
+<span class="fc" id="L21">    otro = RestClient.builder().baseUrl(url).requestFactory(factory).build();</span>
+<span class="fc" id="L22">  }</span>
+
+  public List&lt;EquipoEntidad&gt; todos() {
+<span class="fc" id="L25">    return repo.findAll(org.springframework.data.domain.Sort.by(&quot;nombre&quot;));</span>
+  }
+
+  public EquipoEntidad uno(String id) {
+<span class="fc" id="L29">    return repo.findById(id)</span>
+<span class="fc" id="L30">        .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;Equipo no encontrado&quot;));</span>
+  }
+
+  public EquipoEntidad guardar(String id, EquipoEntrada d) {
+<span class="fc bfc" id="L34" title="All 2 branches covered.">    var e = id == null ? new EquipoEntidad() : uno(id);</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">    if (id == null) e.setId(UUID.randomUUID().toString());</span>
+<span class="fc" id="L36">    e.setNombre(d.nombre().trim());</span>
+<span class="fc" id="L37">    e.setMarca(d.marca().trim());</span>
+<span class="fc" id="L38">    e.setModelo(d.modelo().trim());</span>
+<span class="fc" id="L39">    e.setNumeroSerie(d.numeroSerie().trim());</span>
+<span class="fc" id="L40">    e.setEstado(d.estado());</span>
+<span class="fc" id="L41">    e.setDiagnostico(d.diagnostico().trim());</span>
+<span class="fc" id="L42">    return repo.save(e);</span>
+  }
+
+  public void eliminar(String id) {
+<span class="fc" id="L46">    var e = uno(id);</span>
+    boolean usado;
+    try {
+<span class="fc" id="L49">      usado =</span>
+<span class="fc" id="L50">          Boolean.TRUE.equals(</span>
+<span class="fc" id="L51">              otro.get()</span>
+<span class="fc" id="L52">                  .uri(&quot;/internal/equipos/{id}/en-uso&quot;, id)</span>
+<span class="fc" id="L53">                  .header(&quot;Authorization&quot;, credencial())</span>
+<span class="fc" id="L54">                  .retrieve()</span>
+<span class="fc" id="L55">                  .body(Boolean.class));</span>
+<span class="fc" id="L56">    } catch (RestClientException ex) {</span>
+<span class="fc" id="L57">      throw new ResponseStatusException(</span>
+          SERVICE_UNAVAILABLE, &quot;No se pudo verificar el servicio de atenciones&quot;);
+<span class="fc" id="L59">    }</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">    if (usado) throw new ResponseStatusException(CONFLICT, &quot;El equipo tiene atenciones&quot;);</span>
+<span class="fc" id="L61">    repo.delete(e);</span>
+<span class="fc" id="L62">  }</span>
+
+  private String credencial() {
+    var contexto =
+        (org.springframework.web.context.request.ServletRequestAttributes)
+<span class="fc" id="L67">            org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();</span>
+<span class="fc" id="L68">    return contexto.getRequest().getHeader(&quot;Authorization&quot;);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

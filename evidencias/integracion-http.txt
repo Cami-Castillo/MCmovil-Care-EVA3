@@ -1,0 +1,1 @@
+OK: dos servidores reales. 401 anónimo y clave incorrecta; cliente registra equipo y solicita; técnico cotiza; cliente aprueba; 403 por rol; 409 al borrar equipo referenciado; revocación, reinicio con datos persistidos y DELETE de ambos recursos.

@@ -1,0 +1,21 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+verificacion-logica,com.mcmovilcare.logic,CareController.equipo.new Function1() {...},0,49,0,0,0,8,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,RemoteCareRepository,0,363,1,23,0,45,1,25,0,14
+verificacion-logica,com.mcmovilcare.logic,LoginController,2,145,3,13,0,17,3,10,0,5
+verificacion-logica,com.mcmovilcare.logic,CareController.perfil.new Function1() {...},0,40,0,0,0,3,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,CareController.atencion.new Function1() {...},0,40,0,0,0,3,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,Validacion,6,522,0,70,2,50,3,41,3,6
+verificacion-logica,com.mcmovilcare.logic,CareController.cargar.new Function2() {...},1,95,1,1,0,12,1,1,0,1
+verificacion-logica,com.mcmovilcare.logic,CareController,0,490,3,34,0,65,3,34,0,17
+verificacion-logica,com.mcmovilcare.logic,EntradaSesion,6,9,0,0,0,1,2,1,2,1
+verificacion-logica,com.mcmovilcare.logic,CareController.eliminarEquipo.new Function1() {...},0,14,0,0,0,1,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,CareController.autorizar.new Function1() {...},0,16,0,0,0,1,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,LoginController.entrar.new Function2() {...},17,82,1,1,5,12,1,1,0,1
+verificacion-logica,com.mcmovilcare.logic,CareController.eliminarAtencion.new Function1() {...},0,14,0,0,0,1,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,CareController.escribir.new Function2() {...},0,112,0,2,0,20,0,2,0,1
+verificacion-logica,com.mcmovilcare.logic,LoginController.salir.new Function2() {...},4,17,0,0,3,3,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,CareController.feriados.new Function2() {...},0,66,0,0,0,10,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,CareController.subir.new Function1() {...},0,23,0,0,0,1,0,1,0,1
+verificacion-logica,com.mcmovilcare.logic,LoginEstado,0,42,0,0,0,5,0,5,0,5
+verificacion-logica,com.mcmovilcare.logic,Sesion,6,15,0,0,0,1,2,2,2,2
+verificacion-logica,com.mcmovilcare.logic,CareController.preferencia.new Function1() {...},2,42,1,1,0,3,1,1,0,1

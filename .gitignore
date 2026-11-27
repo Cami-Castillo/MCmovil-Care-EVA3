@@ -1,0 +1,14 @@
+**/target/
+**/build/
+**/.gradle/
+**/.idea/
+**/local.properties
+**/datos/
+**/keystore.properties
+**/CLAVES_SOLO_ENTREGA_PRIVADA.txt
+*.jks
+*.keystore
+logs/
+.env
+
+**/.kotlin/

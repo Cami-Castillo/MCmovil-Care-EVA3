@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AccesoFiltro.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">atenciones</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.atenciones</a> &gt; <span class="el_source">AccesoFiltro.java</span></div><h1>AccesoFiltro.java</h1><pre class="source lang-java linenums">package com.mcmovilcare.atenciones;
+
+import jakarta.servlet.*;
+import jakarta.servlet.http.*;
+import java.io.IOException;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.*;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+@Component
+public class AccesoFiltro extends OncePerRequestFilter {
+<span class="fc" id="L13">  public record Identidad(String usuario, String rol) {}</span>
+
+  private final RestClient catalogo;
+
+<span class="fc" id="L17">  public AccesoFiltro(@Value(&quot;${otro.url}&quot;) String url) {</span>
+<span class="fc" id="L18">    var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();</span>
+<span class="fc" id="L19">    factory.setConnectTimeout(2000);</span>
+<span class="fc" id="L20">    factory.setReadTimeout(2000);</span>
+<span class="fc" id="L21">    catalogo = RestClient.builder().baseUrl(url).requestFactory(factory).build();</span>
+<span class="fc" id="L22">  }</span>
+
+  @Override
+  protected void doFilterInternal(
+      HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+      throws ServletException, IOException {
+<span class="fc bfc" id="L28" title="All 2 branches covered.">    if (req.getRequestURI().equals(req.getContextPath() + &quot;/api/salud&quot;)) {</span>
+<span class="fc" id="L29">      chain.doFilter(req, res);</span>
+<span class="fc" id="L30">      return;</span>
+    }
+<span class="fc" id="L32">    res.setHeader(&quot;Cache-Control&quot;, &quot;no-store&quot;);</span>
+<span class="fc" id="L33">    var credencial = req.getHeader(&quot;Authorization&quot;);</span>
+<span class="pc bpc" id="L34" title="1 of 4 branches missed.">    if (credencial == null || !credencial.startsWith(&quot;Bearer &quot;)) {</span>
+<span class="fc" id="L35">      res.setStatus(401);</span>
+<span class="fc" id="L36">      return;</span>
+    }
+    Identidad identidad;
+    try {
+<span class="fc" id="L40">      identidad =</span>
+          catalogo
+<span class="fc" id="L42">              .get()</span>
+<span class="fc" id="L43">              .uri(&quot;/api/sesion&quot;)</span>
+<span class="fc" id="L44">              .header(&quot;Authorization&quot;, credencial)</span>
+<span class="fc" id="L45">              .retrieve()</span>
+<span class="fc" id="L46">              .body(Identidad.class);</span>
+<span class="fc" id="L47">    } catch (HttpClientErrorException.Unauthorized e) {</span>
+<span class="fc" id="L48">      res.setStatus(401);</span>
+<span class="fc" id="L49">      return;</span>
+<span class="nc" id="L50">    } catch (RestClientException e) {</span>
+<span class="nc" id="L51">      res.setStatus(503);</span>
+<span class="nc" id="L52">      return;</span>
+<span class="fc" id="L53">    }</span>
+<span class="pc bpc" id="L54" title="2 of 4 branches missed.">    if (identidad == null || identidad.rol() == null) {</span>
+<span class="nc" id="L55">      res.setStatus(503);</span>
+<span class="nc" id="L56">      return;</span>
+    }
+<span class="fc" id="L58">    var metodo = req.getMethod();</span>
+<span class="fc bfc" id="L59" title="All 4 branches covered.">    if ((identidad.rol().equals(&quot;CLIENTE&quot;) &amp;&amp; metodo.equals(&quot;PUT&quot;))</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        || (identidad.rol().equals(&quot;TECNICO&quot;)</span>
+<span class="pc bpc" id="L61" title="1 of 4 branches missed.">            &amp;&amp; (metodo.equals(&quot;PATCH&quot;) || metodo.equals(&quot;DELETE&quot;)))) {</span>
+<span class="fc" id="L62">      res.setStatus(403);</span>
+<span class="fc" id="L63">      return;</span>
+    }
+<span class="fc" id="L65">    req.setAttribute(&quot;rol&quot;, identidad.rol());</span>
+<span class="fc" id="L66">    chain.doFilter(req, res);</span>
+<span class="fc" id="L67">  }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

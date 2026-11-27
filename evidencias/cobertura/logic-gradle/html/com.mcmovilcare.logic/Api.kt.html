@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Api.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">logic</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.logic</a> &gt; <span class="el_source">Api.kt</span></div><h1>Api.kt</h1><pre class="source lang-java linenums">package com.mcmovilcare.logic
+
+import okhttp3.MultipartBody
+import retrofit2.http.*
+
+interface CatalogoApi {
+    @GET(&quot;api/equipos&quot;) suspend fun equipos(): List&lt;Equipo&gt;
+
+    @POST(&quot;api/equipos&quot;) suspend fun crear(@Body e: Equipo): Equipo
+
+    @PUT(&quot;api/equipos/{id}&quot;) suspend fun editar(@Path(&quot;id&quot;) id: String, @Body e: Equipo): Equipo
+
+    @DELETE(&quot;api/equipos/{id}&quot;) suspend fun eliminar(@Path(&quot;id&quot;) id: String)
+}
+
+interface AtencionesApi {
+    @GET(&quot;api/atenciones&quot;) suspend fun atenciones(): List&lt;Atencion&gt;
+
+    @POST(&quot;api/atenciones&quot;) suspend fun crear(@Body a: Atencion): Atencion
+
+    @PUT(&quot;api/atenciones/{id}&quot;)
+    suspend fun editar(@Path(&quot;id&quot;) id: Long, @Body a: Atencion): Atencion
+
+    @PATCH(&quot;api/atenciones/{id}/autorizacion&quot;)
+    suspend fun autorizar(@Path(&quot;id&quot;) id: Long, @Body estado: EstadoAutorizacion): Atencion
+
+    @DELETE(&quot;api/atenciones/{id}&quot;) suspend fun eliminar(@Path(&quot;id&quot;) id: Long)
+
+    @Multipart
+    @POST(&quot;api/evidencias&quot;)
+    suspend fun subir(@Part archivo: MultipartBody.Part): ArchivoSubido
+}
+
+interface FeriadosApi {
+    @GET(&quot;api/v3/PublicHolidays/{year}/CL&quot;)
+    suspend fun feriados(@Path(&quot;year&quot;) year: Int): List&lt;Feriado&gt;
+}
+
+interface Cache {
+    suspend fun leer(clave: String): String?
+
+    suspend fun guardar(clave: String, valor: String)
+}
+
+interface CareRepository {
+    suspend fun equipos(): Datos&lt;Equipo&gt;
+
+    suspend fun atenciones(): Datos&lt;Atencion&gt;
+
+    suspend fun guardarEquipo(e: Equipo)
+
+    suspend fun eliminarEquipo(id: String)
+
+    suspend fun guardarAtencion(a: Atencion)
+
+    suspend fun eliminarAtencion(id: Long)
+
+    suspend fun autorizar(id: Long, estado: String)
+
+    suspend fun feriados(year: Int): List&lt;Feriado&gt;
+
+    suspend fun perfil(): Perfil
+
+    suspend fun guardarPerfil(p: Perfil)
+
+    suspend fun preferencia(): Boolean
+
+    suspend fun preferencia(valor: Boolean)
+
+    suspend fun subir(bytes: ByteArray): String
+}
+
+<span class="pc" id="L73">data class EntradaSesion(val usuario: String, val clave: String)</span>
+
+<span class="pc" id="L75">data class Sesion(val token: String, val usuario: String, val rol: String)</span>
+
+interface SesionApi {
+    @POST(&quot;api/sesion&quot;) suspend fun entrar(@Body datos: EntradaSesion): Sesion
+
+    @DELETE(&quot;api/sesion&quot;) suspend fun salir(@Header(&quot;Authorization&quot;) cabecera: String)
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

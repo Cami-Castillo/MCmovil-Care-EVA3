@@ -1,0 +1,39 @@
+name: Verificar MCmovil Care
+on: [push, pull_request]
+jobs:
+  microservicios-y-logica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: mvn -B verify
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: informes-tests-y-cobertura
+          path: |
+            services/*/target/site/jacoco
+            services/*/target/surefire-reports
+            verificacion-logica/target/site/jacoco
+            verificacion-logica/target/surefire-reports
+  android-debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - run: chmod +x android/gradlew
+      - run: cd android && ./gradlew assembleDebug :logic:jacocoTestCoverageVerification
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-debug
+          path: android/app/build/outputs/apk/debug/*.apk

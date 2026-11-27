@@ -1,0 +1,14 @@
+MCMOVIL CARE — EVA4 CON LOGIN
+
+1. Extrae todo el ZIP. Entra en MCare-EVA4-Login.
+2. En el Explorador de Windows, escribe powershell en la barra de dirección.
+3. Ejecuta: .\Iniciar-Servicios.ps1
+4. Enciende tu emulador o conecta tu teléfono con depuración USB.
+5. Ejecuta: .\Instalar-APK.ps1
+6. Entra con cliente / ClienteDemo26!
+
+Para editar abre la carpeta android en Android Studio.
+Otros usuarios de prueba, qué hacer si falla la conexión y
+cómo demostrar el flujo cliente > técnico > cliente: README.md.
+Resultados de pruebas y cobertura: VERIFICACION.md.
+No publiques este ZIP privado completo: incluye la llave académica.

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AtencionesService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">atenciones</a> &gt; <a href="index.source.html" class="el_package">com.mcmovilcare.atenciones</a> &gt; <span class="el_source">AtencionesService.java</span></div><h1>AtencionesService.java</h1><pre class="source lang-java linenums">package com.mcmovilcare.atenciones;
+
+import static org.springframework.http.HttpStatus.*;
+
+import java.time.*;
+import java.util.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.*;
+import org.springframework.web.server.ResponseStatusException;
+
+@Service
+@Transactional
+public class AtencionesService {
+  private final AtencionesRepo repo;
+  private final RestClient catalogo;
+  private final EvidenciasService archivos;
+
+  public AtencionesService(
+<span class="fc" id="L21">      AtencionesRepo r, @Value(&quot;${otro.url}&quot;) String url, EvidenciasService a) {</span>
+<span class="fc" id="L22">    repo = r;</span>
+<span class="fc" id="L23">    var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();</span>
+<span class="fc" id="L24">    factory.setConnectTimeout(3000);</span>
+<span class="fc" id="L25">    factory.setReadTimeout(5000);</span>
+<span class="fc" id="L26">    catalogo = RestClient.builder().baseUrl(url).requestFactory(factory).build();</span>
+<span class="fc" id="L27">    archivos = a;</span>
+<span class="fc" id="L28">  }</span>
+
+  public List&lt;AtencionEntidad&gt; todos() {
+<span class="fc" id="L31">    return repo.findAll(</span>
+<span class="fc" id="L32">        org.springframework.data.domain.Sort.by(</span>
+            org.springframework.data.domain.Sort.Direction.DESC, &quot;id&quot;));
+  }
+
+  public AtencionEntidad uno(Long id) {
+<span class="fc" id="L37">    return repo.findById(id)</span>
+<span class="fc" id="L38">        .orElseThrow(() -&gt; new ResponseStatusException(NOT_FOUND, &quot;Atención no encontrada&quot;));</span>
+  }
+
+  public boolean enUso(String id) {
+<span class="fc" id="L42">    return repo.existsByEquipoId(id);</span>
+  }
+
+  public AtencionEntidad guardar(Long id, AtencionEntrada d) {
+    try {
+<span class="fc" id="L47">      catalogo</span>
+<span class="fc" id="L48">          .get()</span>
+<span class="fc" id="L49">          .uri(&quot;/api/equipos/{id}&quot;, d.equipoId())</span>
+<span class="fc" id="L50">          .header(&quot;Authorization&quot;, credencial())</span>
+<span class="fc" id="L51">          .retrieve()</span>
+<span class="fc" id="L52">          .toBodilessEntity();</span>
+<span class="fc" id="L53">    } catch (HttpClientErrorException.NotFound e) {</span>
+<span class="fc" id="L54">      throw new ResponseStatusException(NOT_FOUND, &quot;Equipo inexistente&quot;);</span>
+<span class="fc" id="L55">    } catch (RestClientException e) {</span>
+<span class="fc" id="L56">      throw new ResponseStatusException(SERVICE_UNAVAILABLE, &quot;Catálogo no disponible&quot;);</span>
+<span class="fc" id="L57">    }</span>
+<span class="fc" id="L58">    fecha(d.garantiaHasta());</span>
+<span class="fc" id="L59">    fecha(d.mantenimiento());</span>
+<span class="pc bpc" id="L60" title="1 of 4 branches missed.">    if (d.evidencia() != null &amp;&amp; !d.evidencia().isBlank()) archivos.leer(d.evidencia());</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">    var a = id == null ? new AtencionEntidad() : uno(id);</span>
+<span class="fc" id="L62">    a.setEquipoId(d.equipoId());</span>
+<span class="fc" id="L63">    a.setTipoServicio(d.tipoServicio());</span>
+<span class="fc" id="L64">    a.setDescripcion(d.descripcion());</span>
+<span class="fc" id="L65">    a.setCorreoContacto(d.correoContacto());</span>
+<span class="fc" id="L66">    a.setEstado(d.estado());</span>
+<span class="fc" id="L67">    a.setImporte(d.importe());</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">    if (id == null) a.setAutorizacion(d.autorizacion());</span>
+<span class="fc" id="L69">    a.setInforme(d.informe());</span>
+<span class="fc" id="L70">    a.setGarantiaHasta(d.garantiaHasta());</span>
+<span class="fc" id="L71">    a.setMantenimiento(d.mantenimiento());</span>
+<span class="fc" id="L72">    a.setEvidencia(d.evidencia());</span>
+<span class="fc" id="L73">    a.getHistorial()</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        .add(Instant.now() + &quot; · &quot; + (id == null ? &quot;Creada&quot; : &quot;Actualizada&quot;) + &quot; · &quot; + d.estado());</span>
+<span class="fc" id="L75">    return repo.save(a);</span>
+  }
+
+  private void fecha(String valor) {
+<span class="pc bpc" id="L79" title="1 of 4 branches missed.">    if (valor != null &amp;&amp; !valor.isBlank())</span>
+      try {
+<span class="fc" id="L81">        LocalDate.parse(valor);</span>
+<span class="fc" id="L82">      } catch (DateTimeException e) {</span>
+<span class="fc" id="L83">        throw new ResponseStatusException(BAD_REQUEST, &quot;Fecha inválida: usa AAAA-MM-DD&quot;);</span>
+<span class="fc" id="L84">      }</span>
+<span class="fc" id="L85">  }</span>
+
+  public AtencionEntidad autorizar(Long id, AutorizacionEntrada d) {
+<span class="fc" id="L88">    var a = uno(id);</span>
+<span class="fc" id="L89">    a.setAutorizacion(d.autorizacion());</span>
+<span class="fc" id="L90">    a.getHistorial().add(Instant.now() + &quot; · Autorización &quot; + d.autorizacion());</span>
+<span class="fc" id="L91">    return repo.save(a);</span>
+  }
+
+  public void eliminar(Long id) {
+<span class="fc" id="L95">    repo.delete(uno(id));</span>
+<span class="fc" id="L96">  }</span>
+
+  private String credencial() {
+    var contexto =
+        (org.springframework.web.context.request.ServletRequestAttributes)
+<span class="fc" id="L101">            org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();</span>
+<span class="fc" id="L102">    return contexto.getRequest().getHeader(&quot;Authorization&quot;);</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>

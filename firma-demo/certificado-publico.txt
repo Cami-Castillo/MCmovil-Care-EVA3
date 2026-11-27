@@ -1,0 +1,26 @@
+Alias name: mccare-demo
+Creation date: Nov 20, 2026
+Entry type: PrivateKeyEntry
+Certificate chain length: 1
+Certificate[1]:
+Owner: CN=MCmovil Care Demo Academica, OU=EVA4, O=Proyecto Estudiantil, C=CL
+Issuer: CN=MCmovil Care Demo Academica, OU=EVA4, O=Proyecto Estudiantil, C=CL
+Serial number: f868f1ec71425bf5
+Valid from: Fri Nov 20 15:46:15 CLST 2026 until: Mon Nov 20 15:46:15 CLST 2056
+Certificate fingerprints:
+	 SHA1: 59:10:98:5B:3A:3D:7F:D1:E8:F7:63:26:1F:A7:6E:EA:52:E3:67:8F
+	 SHA256: 68:64:BE:58:98:4E:70:09:ED:AB:3A:B2:ED:64:5E:3A:30:B4:64:47:30:F9:7D:D6:74:8D:09:3C:52:B8:08:EF
+Signature algorithm name: SHA384withRSA
+Subject Public Key Algorithm: 3072-bit RSA key
+Version: 3
+
+Extensions: 
+
+#1: ObjectId: 2.5.29.14 Criticality=false
+SubjectKeyIdentifier [
+KeyIdentifier [
+0000: EF 61 54 08 75 D5 CC CA   97 2E 14 DB 24 C7 D6 7A  .aT.u.......$..z
+0010: 03 25 4E 8D                                        .%N.
+]
+]
+

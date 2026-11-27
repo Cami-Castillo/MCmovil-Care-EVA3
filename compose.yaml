@@ -1,0 +1,20 @@
+services:
+  catalogo:
+    build:
+      context: .
+      dockerfile: services/catalogo/Dockerfile
+    ports: ["127.0.0.1:8081:8081"]
+    environment:
+      ATENCIONES_URL: http://atenciones:8082
+    volumes: ["datos_catalogo:/app/datos"]
+  atenciones:
+    build:
+      context: .
+      dockerfile: services/atenciones/Dockerfile
+    ports: ["127.0.0.1:8082:8082"]
+    environment:
+      CATALOGO_URL: http://catalogo:8081
+    volumes: ["datos_atenciones:/app/datos"]
+volumes:
+  datos_catalogo:
+  datos_atenciones:

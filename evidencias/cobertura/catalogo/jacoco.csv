@@ -1,0 +1,10 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+catalogo,com.mcmovilcare.catalogo,SesionController.Cuenta,0,12,0,0,0,1,0,1,0,1
+catalogo,com.mcmovilcare.catalogo,SesionController.Acceso,0,12,0,0,0,1,0,1,0,1
+catalogo,com.mcmovilcare.catalogo,Errores,0,44,0,0,0,8,0,5,0,5
+catalogo,com.mcmovilcare.catalogo,CatalogoService,0,159,0,6,0,35,0,10,0,7
+catalogo,com.mcmovilcare.catalogo,CatalogoController,0,46,0,0,0,11,0,7,0,7
+catalogo,com.mcmovilcare.catalogo,SesionController.Sesion,0,9,0,0,0,1,0,1,0,1
+catalogo,com.mcmovilcare.catalogo,AccesoFiltro,0,72,1,13,0,18,1,8,0,2
+catalogo,com.mcmovilcare.catalogo,SesionController,32,228,9,15,5,43,9,11,0,8
+catalogo,com.mcmovilcare.catalogo,SesionController.Identidad,0,9,0,0,0,1,0,1,0,1
