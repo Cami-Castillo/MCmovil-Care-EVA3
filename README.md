@@ -158,3 +158,19 @@ Informes Maven: `services/*/target/site/jacoco/index.html` y `verificacion-logic
 Los paquetes de lógica están en `logic/src/main/kotlin/com/mcmovilcare/logic/{data/model,data/remote,repository,domain}`; se mantienen en un módulo compartido para que las pruebas JVM ejecuten los mismos fuentes. Las pantallas Android están en `ui/screens`, navegación en `ui`, adaptador Room en `data`, ViewModels en `viewmodel`. Se mantiene el backend original por compatibilidad, con corrección del manejador de errores nulos.
 
 El APK release fue generado, firmado y verificado el 27 de noviembre de 2026. Su instalación y apertura en el emulador fueron exitosas; falta confirmar el flujo completo conectado al backend después del último intento de arranque de Catálogo. Las cuentas demo siguen compartiendo registros; gestión dinámica de usuarios y notificaciones del sistema quedan pendientes.
+
+
+### Evidencias del APK firmado y llave JKS
+
+**APK release generado:**
+
+![APK firmado](evidencias/APK-firmado.png)
+
+**Llave de firma digital:**
+
+![Llave JKS](evidencias/Llave-jks.png)
+
+### Evidencias de pruebas
+
+[Resultados de pruebas y cobertura](evidencias/EvidenciasPruebas.docx)
+
