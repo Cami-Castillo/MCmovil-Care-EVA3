@@ -1,176 +1,270 @@
-# 1. Nombre del proyecto
+# MCmovil Care
 
-**MCmovil Care** — Evaluación Parcial 4 (Experiencia 3), DSY1105 Desarrollo de Aplicaciones Móviles.
+Aplicación móvil Android para gestionar el ciclo de vida de equipos y sus atenciones técnicas. Permite registrar solicitudes, consultar diagnósticos, gestionar cotizaciones, revisar el historial y planificar mantenciones considerando los feriados de Chile.
 
-MVP académico del seguimiento del ciclo de vida de equipos: app Android (Kotlin + Jetpack Compose) conectada a dos microservicios Spring Boot propios y a una API externa de feriados. Solo usa datos ficticios; no se conecta a Gestioo.
+**Versión:** 4.2 · **Asignatura:** DSY1105 – Desarrollo de Aplicaciones Móviles · Duoc UC
 
-# 2. Integrantes
+## Integrantes
 
-- Alejandrina Farias
 - Camila Castillo
+- Alejandrina Farias
 
+## Funcionalidades
 
-# 3. Funcionalidades
+- Inicio de sesión y acceso diferenciado según el rol.
+- Panel de inicio con resumen de equipos, atenciones y autorizaciones pendientes.
+- Registro, consulta, edición y eliminación de equipos y atenciones según permisos.
+- Cotizaciones, autorización o rechazo, historial, informes técnicos y garantías.
+- Captura o selección de fotografías y almacenamiento de evidencias en el servidor.
+- Agenda interactiva de mantenciones con feriados de Chile y sugerencia de día hábil.
+- Consulta de equipos y atenciones previamente sincronizados sin conexión, con modificaciones remotas deshabilitadas.
+- Perfil de contacto y preferencias almacenados localmente.
 
-- Inicio con contadores calculados a partir de los registros y aviso de autorizaciones pendientes.
-- Equipos: consulta para los tres roles; creación, edición y eliminación reservadas al administrador.
-- Atenciones: crear, consultar, editar y eliminar; estados, cotización ficticia, autorización/rechazo, historial, informe, garantía y próxima mantención.
-- Evidencias: captura con cámara o selección, vista previa, carga real al servicio de atenciones y consulta de la imagen guardada.
-- Login obligatorio y roles validados en servidor. Perfil de contacto independiente, de almacenamiento local y con validación por campo.
-- Preferencia local persistente para mostrar diagnósticos.
-- Agenda con calendario interactivo y reprogramación de mantenciones, con feriados reales de Chile desde Nager.Date, vía Retrofit desde Android; cálculo de día hábil nacional de referencia y mantenciones ya registradas. Los feriados regionales se distinguen y no se tratan como nacionales.
-- Room conserva copia de equipos/atenciones para consulta sin conexión. Sin conexión se deshabilitan los cambios remotos: no se afirma que exista una cola de sincronización. Perfil y preferencia se conservan localmente.
-- Estados de carga, errores, reintento, validación por campo, confirmación de borrado y animación de detalles.
+## Tecnologías y arquitectura
 
-## Organización y arquitectura
+| Componente | Tecnología |
+|---|---|
+| Aplicación móvil | Kotlin, Jetpack Compose, Material 3, MVVM |
+| Comunicación | Retrofit, OkHttp, JSON y API REST |
+| Persistencia local | Room |
+| Backend | Java 21, Spring Boot 3.5.7, Spring Data JPA |
+| Persistencia en servidor | H2, una base por microservicio |
+| API externa | Nager.Date |
+| Pruebas | Kotest, MockK, JUnit, MockMvc, Compose UI Test y JaCoCo |
+| Control de versiones | Git y GitHub |
 
-- `android/app`: Compose/Material 3, navegación, adaptación al ancho disponible, CareViewModel, cámara, FileProvider y adaptador Room.
-- `logic`: **lógica activa compartida**, utilizada por CareViewModel: modelos, validaciones, contratos Retrofit, RemoteCareRepository y CareController (estado y acciones asíncronas). No es un ejemplo independiente sin conexión con la app.
-- `services/catalogo`: aplicación Spring Boot independiente y H2 propia de equipos.
-- `services/atenciones`: aplicación Spring Boot independiente y H2 propia de atenciones/historial; archivos de evidencias en su volumen.
-- `verificacion-logica`: ejecuta los mismos fuentes Kotlin de logic mediante Maven, con Kotest/MockK/coroutines-test y JaCoCo; no mantiene copias alternativas de la lógica.
+```text
+Pantallas Compose → ViewModel → CareController → Repository
+                                              ├─ Room (copia local)
+                                              └─ Retrofit / HTTP
+                                                  ├─ Catálogo :8081 → H2
+                                                  ├─ Atenciones :8082 → H2
+                                                  └─ Nager.Date (feriados)
+```
 
-Las bases están en `services/catalogo/datos` y `services/atenciones/datos`. No las borres si deseas conservar registros. Los tests usan otras bases en memoria. Las fotos están en `services/atenciones/datos/evidencias`.
+### Estructura del proyecto
 
-## Acceso de demostración
+| Ruta | Responsabilidad |
+|---|---|
+| `android/app/src/main/java/.../ui` | Pantallas, navegación, componentes y tema visual. |
+| `android/app/src/main/java/.../viewmodel` | Estado y coordinación de acciones de la interfaz. |
+| `android/app/src/main/java/.../data` | Adaptador de persistencia local con Room. |
+| `logic/src/main/kotlin/com/mcmovilcare/logic/data/model` | Modelos de datos. |
+| `logic/src/main/kotlin/com/mcmovilcare/logic/data/remote` | Contratos de API y configuración Retrofit. |
+| `logic/src/main/kotlin/com/mcmovilcare/logic/repository` | Acceso a datos remotos y caché. |
+| `logic/src/main/kotlin/com/mcmovilcare/logic/domain` | Controladores de lógica y validaciones. |
+| `services/catalogo` | Microservicio de equipos y sesiones. |
+| `services/atenciones` | Microservicio de atenciones y evidencias. |
+| `verificacion-logica` | Ejecución Maven y cobertura de los mismos fuentes Kotlin del módulo `logic`. |
+| `evidencias` | Resultados de pruebas y capturas del proyecto. |
+| `tools` | Configuración del entorno utilizada por los scripts PowerShell. |
 
-Al abrir la app solo aparece **Iniciar sesión**. Inicia los dos servicios antes de ingresar:
+En el backend, los Controller reciben solicitudes HTTP, los Service aplican reglas de negocio, los Repository acceden a los datos mediante JPA y las Entity representan las entidades persistentes. Los filtros `AccesoFiltro` validan la sesión y restringen operaciones según el rol.
 
-| Usuario | Contraseña ficticia | Uso |
+## Microservicios y endpoints
+
+### Catálogo — `http://localhost:8081`
+
+| Método | Endpoint | Función |
 |---|---|---|
-| `cliente` | `ClienteDemo26!` | Consulta equipos, crea y consulta solicitudes y responde cotizaciones. |
-| `tecnico` | `TecnicoDemo26!` | Consulta equipos y actualiza estados, informes y evidencias de las atenciones. |
-| `admin` | `AdminDemo26!` | Gestiona equipos y atenciones, incluyendo eliminación y autorización. |
+| GET | `/api/salud` | Estado del servicio. |
+| POST | `/api/sesion` | Autenticar usuario y obtener token. |
+| GET | `/api/sesion` | Consultar identidad de la sesión. |
+| DELETE | `/api/sesion` | Revocar sesión. |
+| GET | `/api/equipos` | Listar equipos. |
+| GET | `/api/equipos/{id}` | Consultar equipo. |
+| POST | `/api/equipos` | Crear equipo. |
+| PUT | `/api/equipos/{id}` | Actualizar equipo. |
+| DELETE | `/api/equipos/{id}` | Eliminar equipo sin referencias. |
 
-Son cuentas de prueba preconfiguradas; no existe registro de usuarios ni administración de cuentas desde la app. Los roles operan sobre un conjunto compartido de datos ficticios (no hay aislamiento de múltiples clientes reales). No uses información real ni expongas esta demo públicamente. Puedes cambiar las contraseñas en el servidor con las variables MCCARE_CLAVE_CLIENTE, MCCARE_CLAVE_TECNICO y MCCARE_CLAVE_ADMIN.
+### Atenciones — `http://localhost:8082`
 
-Catálogo comprueba las credenciales y devuelve un token temporal. Retrofit lo envía a las dos API propias en `Authorization: Bearer ...`; nunca se adjunta al servicio externo de feriados. Ambos servicios bloquean el acceso anónimo a los datos. Los permisos se validan en el backend además de reflejarse en la interfaz. El token no se guarda en Room: si se cierra el proceso de la app o se reinicia Catálogo, hay que ingresar otra vez. La sesión del servidor vence en 8 horas o al recibir el cierre de sesión. Si cierras sin conexión, el cierre local es inmediato y el servidor conserva esa sesión hasta que venza.
+| Método | Endpoint | Función |
+|---|---|---|
+| GET | `/api/salud` | Estado del servicio. |
+| GET | `/api/atenciones` | Listar atenciones. |
+| GET | `/api/atenciones/{id}` | Consultar atención. |
+| POST | `/api/atenciones` | Crear atención. |
+| PUT | `/api/atenciones/{id}` | Actualizar atención. |
+| PATCH | `/api/atenciones/{id}/autorizacion` | Autorizar o rechazar cotización. |
+| DELETE | `/api/atenciones/{id}` | Eliminar atención. |
+| POST | `/api/evidencias` | Cargar imagen (multipart, campo `archivo`). |
+| GET | `/api/evidencias/{nombre}` | Recuperar imagen. |
+| GET | `/internal/equipos/{id}/en-uso` | Comprobar referencias a equipos entre servicios. |
 
-# 4. Endpoints utilizados
+### API externa
 
-Catálogo: `http://localhost:8081/`
-- GET `/api/salud` (público)
-- POST `/api/sesion`: recibe usuario/clave y responde token, usuario y rol.
-- GET `/api/sesion`: identifica la sesión activa.
-- DELETE `/api/sesion`: revoca la sesión.
-- GET/POST `/api/equipos`
-- GET/PUT/DELETE `/api/equipos/{id}`
+`GET https://date.nager.at/api/v3/PublicHolidays/{year}/CL`
 
-Atenciones: `http://localhost:8082/`
-- GET `/api/salud`
-- GET/POST `/api/atenciones`
-- GET/PUT/DELETE `/api/atenciones/{id}`
-- PATCH `/api/atenciones/{id}/autorizacion`
-- POST `/api/evidencias` (multipart, campo archivo)
-- GET `/api/evidencias/{nombre}`
-- GET `/internal/equipos/{id}/en-uso` (comprobación entre servicios)
+Retrofit consulta los feriados del año seleccionado para identificar conflictos con mantenciones. Este servicio no modifica las bases de datos del negocio.
 
-La creación/edición de atención consulta el catálogo. El borrado de equipo consulta las referencias de atenciones; devuelve 409 si hay referencias y 503 si no puede comprobarlas. No se simulan dos servicios dentro de una única base: son dos procesos y dos almacenes. Esta demostración no implementa transacciones distribuidas ni coordinación de carreras concurrentes entre procesos.
+## Instalación y ejecución en Windows
 
-API externa: `https://date.nager.at/api/v3/PublicHolidays/{año}/CL`. Se consulta directamente con Retrofit desde la pantalla Agenda. No guarda ni reemplaza datos del negocio. Si falla, las otras pantallas siguen funcionando; el cálculo advierte cuando solo está excluyendo fines de semana. No planifiques años distintos del que muestra la consulta.
+### Requisitos
 
-# 5. Pasos para ejecutar
+- JDK completo 21 (incluido `javac`); usar JDK 21 para Gradle.
+- Android Studio compatible con AGP 8.13.2, Android SDK Platform 35, Build Tools 35.0.0 y Platform Tools.
+- Emulador Android (recomendado API 35) o teléfono Android API 26 o superior con depuración USB.
+- Internet para descargar dependencias inicialmente y consultar feriados. El script descarga Maven 3.9.11 si es necesario.
+- Puertos locales 8081 y 8082 disponibles.
 
-1. Extrae el ZIP COMPLETO; no copies solo android. La raíz debe mostrar android, logic, services y pom.xml. Las carpetas firma-demo y entrega pueden requerir creación si se clona el repositorio público.
-2. En esa raíz, escribe `powershell` en la barra de direcciones del Explorador. Ejecuta `.\Iniciar-Servicios.ps1`. Descarga Maven si falta y selecciona un JDK completo >=21; evita el acceso de Oracle javapath. No cambia la configuración global del PC. Los puertos son **8081 y 8082**, no 8080.
-3. Abre `http://localhost:8081/api/salud` y `http://localhost:8082/api/salud`. Ambos deben devolver OK.
-4. Enciende un emulador Android API 26 o superior, o conecta un teléfono con depuración USB. Ejecuta `.\Conectar-Dispositivo.ps1` para establecer ambos puertos; ejecuta la app desde Android Studio. Para instalar el APK firmado, usa `.\Instalar-APK.ps1`. Es necesario repetir el reverse tras desconectar el teléfono/emulador.
-5. Si quieres editar el código, abre **la carpeta android** en Android Studio, no la raíz de entrega. Espera el Sync y ejecuta app. Debug tiene un applicationId diferente para poder coexistir con release y con la entrega anterior.
-6. Al terminar: `.\Detener-Servicios.ps1` detiene solo los procesos registrados por este proyecto.
+### 1. Obtener el proyecto
 
-Si PowerShell bloquea scripts y la política del instituto lo permite, usa `Set-ExecutionPolicy -Scope Process Bypass` solo en esa ventana. No hace falta ejecutarlo si ya están permitidos. Si una directiva institucional lo impide, no se modifica esa directiva: ejecuta los comandos Maven y Java equivalentes desde el IDE/terminal autorizado.
+Descargar el ZIP completo de entrega o clonar el repositorio:
 
-## Requisitos técnicos
+```powershell
+git clone https://github.com/Cami-Castillo/MCmovil-Care-EVA3.git C:\mccare
+```
 
-- Backend: JDK completo 21 o superior. Para probar o reconstruir Android desde Gradle usa JDK 21 (o el JBR 21 de Android Studio) y configura JAVA_HOME. Un JDK 25 puede servir para iniciar el backend y probar el APK ya firmado.
-- Android: Gradle 8.13, AGP 8.13.2, Kotlin 2.2.21, compileSdk/targetSdk 35, minSdk 26. Se abandonaron los números futuros del ZIP anterior para poder comprobar la compilación.
-- Android Studio con SDK Platform 35, Build Tools 35.0.0 y Platform Tools. El APK release de esta revisión fue generado y su firma verificada.
-- Internet para la API externa y las descargas iniciales. Los microservicios locales no requieren internet una vez construidos.
+Si se utiliza el ZIP, extraerlo de modo que `C:\mccare` contenga `android`, `logic`, `services`, `tools` y `pom.xml`. Se recomienda una ruta corta para evitar problemas de longitud en Windows. No abrir ni ejecutar desde dentro del ZIP.
 
-## Prueba manual de todos los flujos
+### 2. Iniciar el backend
 
-1. Abre la app: solo debe aparecer el login. Prueba una contraseña inválida y luego entra como administrador. Registra tus datos ficticios de contacto y comprueba el resumen.
-2. Registra un equipo (nombre, marca, modelo, serie, estado y diagnóstico).
-3. Edítalo y comprueba el cambio tras Actualizar.
-4. Cierra sesión e ingresa como cliente. Crea una atención para ese equipo. Prueba primero descripción corta y correo inválido.
-5. Adjunta una foto ficticia pequeña; guarda y abre los detalles para comprobarla desde el servidor.
-6. Pulsa **Salir** y entra como técnico. En **Editar atención**, cambia el estado a Cotizada y agrega el monto y el informe. Guarda.
-7. Cierra la sesión técnica y vuelve a entrar como cliente. Autoriza desde la tarjeta. Verifica el historial y el contador de pendientes.
-8. Ingresa como técnico o administrador. Edita estado, garantía y próxima mantención. Consulta Agenda y sus feriados.
-9. Cambia la preferencia de diagnósticos; cierra y abre la app.
-10. Detén y reinicia ambos servicios; vuelve a entrar. Los registros e historial deben permanecer.
-11. Ingresa como administrador. Prueba eliminar el equipo con atención: debe impedirse. Elimina atención y luego equipo.
-12. Después de haber cargado datos, detén servicios y pulsa Actualizar: debe mostrar copia local y bloquear edición. Enciéndelos y reintenta.
+Abrir PowerShell en la raíz del proyecto:
 
-La eliminación de atenciones no borra inmediatamente las imágenes huérfanas del servidor. La demo limita archivos a 5 MiB y valida que sean imágenes; no incluye una política de limpieza de archivos ni un almacenamiento cloud de evidencias.
+```powershell
+cd C:\mccare
+# Solo si Windows bloquea scripts y la política del equipo lo permite:
+Set-ExecutionPolicy -Scope Process Bypass
+.\Iniciar-Servicios.ps1
+```
 
-## Tests y cobertura
+Comprobar que ambos servicios estén activos:
 
-Resultados de las ejecuciones del 27/11/2026:
+```powershell
+Invoke-RestMethod http://localhost:8081/api/salud
+Invoke-RestMethod http://localhost:8082/api/salud
+```
 
-| Comprobación | Resultado |
+Ambos deben devolver `estado: OK`. Las bases H2 se crean automáticamente si no existen. Los datos se conservan entre reinicios en las carpetas `services/catalogo/datos` y `services/atenciones/datos`.
+
+### 3. Ejecutar desde Android Studio
+
+1. Seleccionar **File > Open** y abrir `C:\mccare\android` (no la raíz ni `android/app`). El módulo `logic` se incorpora automáticamente mediante `settings.gradle.kts`.
+2. Seleccionar JDK 21 en Gradle JDK y esperar a que termine Gradle Sync. Si se solicita la ubicación del SDK, seleccionar el SDK instalado en ese equipo.
+3. Abrir Device Manager e iniciar un emulador API 35.
+4. Desde PowerShell, conectar los puertos del dispositivo con el backend:
+
+```powershell
+cd C:\mccare
+.\Conectar-Dispositivo.ps1
+```
+
+5. Seleccionar la configuración `app`, el emulador y presionar **Run**. Esta opción ejecuta la versión debug y permite modificar y probar el código.
+
+### 4. Ejecutar el APK firmado sin recompilar (alternativa)
+
+El ZIP de entrega contiene `entrega/MCmovilCare-EVA4-release.apk`. Si se clonó el repositorio, descargar el APK desde [GitHub Releases](https://github.com/Cami-Castillo/MCmovil-Care-EVA3/releases) y guardarlo con ese nombre dentro de `entrega`.
+
+Con los microservicios activos y el emulador encendido:
+
+```powershell
+cd C:\mccare
+.\Instalar-APK.ps1
+```
+
+El script configura ADB Reverse, instala y abre la aplicación release. Si hay varios dispositivos conectados, usar `adb devices` y pasar `-Serial "SERIAL_DEL_DISPOSITIVO"` al script correspondiente.
+
+El APK utiliza `127.0.0.1` y necesita ADB Reverse para acceder al backend del computador. Instalarlo en un teléfono sin esta conexión permite abrirlo, pero no iniciar una nueva sesión. La versión debug y release pueden coexistir.
+
+### 5. Usuarios de demostración
+
+| Usuario | Contraseña de demostración | Permisos principales |
+|---|---|---|
+| `admin` | `AdminDemo26!` | Gestionar equipos y atenciones; responder cotizaciones. |
+| `cliente` | `ClienteDemo26!` | Consultar equipos y atenciones, crear solicitudes y responder cotizaciones. |
+| `tecnico` | `TecnicoDemo26!` | Consultar equipos y atenciones, actualizar atenciones y adjuntar evidencias. |
+
+Las cuentas son ficticias y comparten los registros del backend. Catálogo genera un token aleatorio de sesión de ocho horas (no JWT), que se envía mediante `Authorization: Bearer ...`. Reiniciar Catálogo requiere iniciar sesión nuevamente.
+
+### 6. Detener los servicios
+
+```powershell
+cd C:\mccare
+.\Detener-Servicios.ps1
+```
+
+Si un puerto aparece ocupado, comprobar primero `/api/salud`. Si el servicio pertenece al proyecto, utilizar el script de detención antes de reiniciarlo. Si falla el arranque, revisar `logs/catalogo.log`, `logs/atenciones.log` y sus respectivos archivos de error. No eliminar bases de datos para resolver problemas de conexión.
+
+## Pruebas y cobertura
+
+Detener los microservicios antes de ejecutar Maven para evitar el bloqueo de archivos JAR en Windows. Desde la raíz:
+
+```powershell
+.\Ejecutar-Pruebas.ps1
+```
+
+Para incluir las pruebas instrumentadas, iniciar el emulador y ejecutar:
+
+```powershell
+.\Ejecutar-Pruebas.ps1 -ConInterfaz
+```
+
+Resultados registrados el 27 de noviembre de 2026:
+
+| Verificación | Resultado |
 |---|---|
 | ControllerTest | 19/19 |
 | LoginTest | 4/4 |
 | RepositoryTest | 7/7 |
 | ValidacionTest | 35/35 |
-| Total lógica | 65/65, sin fallos ni errores |
-| Pruebas instrumentadas en Pixel 7, Android 15 | 10/10 |
-| Maven: Catálogo, Atenciones y verificación de lógica | BUILD SUCCESS |
-| Control de cobertura JaCoCo | Aprobado |
-| Acceso HTTP sin sesión | 2/2 (401) |
-| Consultas y restricciones generales por rol | 13/13 (200 o 403 según operación) |
+| Total pruebas de lógica | 65/65 |
+| Pruebas instrumentadas (Pixel 7, Android 15) | 10/10 |
+| Comprobaciones HTTP sin sesión y por rol | 15/15 |
+| Compilación y pruebas Maven | Catálogo, Atenciones y lógica: SUCCESS |
 
-Las comprobaciones HTTP no constituyen una auditoría integral de seguridad ni verifican aislamiento entre clientes. La cobertura de lógica no equivale a cobertura de todo el código Android. Los informes originales permiten consultar los porcentajes exactos y las exclusiones.
+| Módulo JaCoCo (Maven) | Instrucciones | Líneas | Ramas |
+|---|---:|---:|---:|
+| Lógica | 97% | 94,44% | 93% |
+| Catálogo | 94% | 96,12% | 79% |
+| Atenciones | 95% | 93,71% | 78% |
 
+La cobertura corresponde al código analizado, con exclusiones de modelos y clases sin reglas según la configuración; no representa la totalidad de Android. El paquete `data.remote` del informe lógico registra 0% de instrucciones. Las comprobaciones HTTP verifican restricciones generales, no una auditoría integral de seguridad.
 
-`.\Ejecutar-Pruebas.ps1` ejecuta la suite Maven y el control de cobertura Gradle. Con emulador: `.\Ejecutar-Pruebas.ps1 -ConInterfaz`.
+Informes generados:
 
-Herramientas: Kotest para lógica, MockK para dependencias reemplazadas, coroutines-test para asincronía y JUnit Jupiter/MockMvc para backend. Las pruebas de pantalla usan **JUnit 4 con ComposeTestRule**, como en la guía de Android. JUnit Jupiter se utiliza en el backend.
+- `verificacion-logica/target/site/jacoco/index.html`
+- `services/catalogo/target/site/jacoco/index.html`
+- `services/atenciones/target/site/jacoco/index.html`
+- `logic/build/reports/jacoco/test/html/index.html`
+- `android/app/build/reports/androidTests/connected/debug/index.html`
 
-JaCoCo comprueba automáticamente mínimo **80% de líneas** en cada módulo lógico. Se incluyen controlador, validaciones y repositorio; los DTO/entidades sin reglas y puntos de arranque se excluyen de forma explícita. **La cifra de logic incluye LoginController pero no la interfaz Compose ni los adaptadores Android de Room/cámara**; esos componentes se comprueban con compilación, tests de UI y pruebas de integración/manuales. Ver `VERIFICACION.md` para los números realmente obtenidos, alcance y limitaciones. No se presenta número de tests como porcentaje de cobertura.
+[Consultar evidencias de pruebas y firma](evidencias/EvidenciasPruebas.docx).
 
-Informes Maven: `services/*/target/site/jacoco/index.html` y `verificacion-logica/target/site/jacoco/index.html`. Informe Gradle: `logic/build/reports/jacoco/test/html/index.html`. Guarda los nuevos XML y capturas en `evidencias`.
+## APK firmado
 
-# 6. APK release y firma digital
+La versión 4.2 fue compilada en modo release, firmada con una llave académica JKS (alias `mccare`) y verificada mediante `apksigner`. Firma APK v2, RSA 2048 bits. Se instaló y se comprobó el funcionamiento conectado a los microservicios en un emulador Pixel 7 con Android 15.
 
-1. Android Studio: Build > Generate Signed Bundle / APK > APK > Create new. Elige una llave JKS académica, alias y contraseñas propias; no las publiques.
-2. Copia `android/keystore.properties.example` a `android/keystore.properties` y completa la ruta relativa a android, alias y contraseñas.
-3. Ejecuta `./Generar-Release.ps1` desde la raíz. El script ejecuta pruebas y genera `entrega/MCmovilCare-EVA4-release.apk`.
-4. Verifica la firma con `apksigner verify --print-certs -v`, guarda la salida y las capturas reales en evidencias. Instala con `./Instalar-APK.ps1`.
-5. Entrega llave y contraseñas por canal privado acordado con el docente. No reutilices la llave académica en producción. Si instalaste una versión firmada con otra llave, desinstálala primero si no necesitas sus datos.
+[Descargar APK en GitHub Releases](https://github.com/Cami-Castillo/MCmovil-Care-EVA3/releases)
 
-## Resultados verificados de la firma (27/11/2026)
+### Reconstruir la versión release
 
-- APK: `entrega/MCmovilCare-EVA4-release.apk`, versión 4.2.
-- Llave académica: `firma-demo/mccare-academico.jks`, alias `mccare` (entrega privada).
-- `apksigner verify --verbose --print-certs`: `Verifies`, esquema v2 válido, un firmante, RSA de 2048 bits.
-- Huella SHA-256 del certificado, coincidente con la llave JKS: `d45a3b77e95473b83d2c55cdd17934bcc5a1e1b809fb89153546f518f7f2c2c3`.
-- Instalación del APK en Pixel 7 (Android 15): `Success`. Inicio de actividad confirmado. La prueba funcional completa de release con servicios activos queda pendiente de confirmación.
+No es necesario para ejecutar el APK existente. Para generar otra versión firmada, disponer de la llave y crear `android/keystore.properties` a partir de `android/keystore.properties.example`, completando las credenciales de forma privada. La configuración de firma se encuentra en `android/app/build.gradle.kts`.
 
-**Evidencias pendientes de adjuntar:** capturas del APK, del archivo JKS (sin credenciales), de la verificación de firma, de los informes de pruebas y de Trello. No publicar la llave privada ni `keystore.properties`.
+Con los servicios detenidos y la configuración de firma preparada:
 
-## Documentación adicional
+```powershell
+cd C:\mccare
+New-Item -ItemType Directory -Path .\entrega -Force | Out-Null
+.\Generar-Release.ps1
+```
 
-`MATRIZ_RUBRICA.md`, `VERIFICACION.md`, `GUIA_DEFENSA.md`, `docs/ENDPOINTS.http`, `docs/GUIAS_APLICADAS.md`, `TRELLO.md`.
+El APK queda en `entrega/MCmovilCare-EVA4-release.apk`. La llave privada y sus contraseñas no deben publicarse en GitHub. Para la entrega académica, se proporcionan únicamente mediante el canal privado autorizado.
 
-## Revisión de estructura y diseño
-Los paquetes de lógica están en `logic/src/main/kotlin/com/mcmovilcare/logic/{data/model,data/remote,repository,domain}`; se mantienen en un módulo compartido para que las pruebas JVM ejecuten los mismos fuentes. Las pantallas Android están en `ui/screens`, navegación en `ui`, adaptador Room en `data`, ViewModels en `viewmodel`. Se mantiene el backend original por compatibilidad, con corrección del manejador de errores nulos.
-
-El APK release fue generado, firmado y verificado el 27 de noviembre de 2026. Su instalación y apertura en el emulador fueron exitosas; falta confirmar el flujo completo conectado al backend después del último intento de arranque de Catálogo. Las cuentas demo siguen compartiendo registros; gestión dinámica de usuarios y notificaciones del sistema quedan pendientes.
-
-
-### Evidencias del APK firmado y llave JKS
-
-**APK release generado:**
+**APK generado**
 
 ![APK firmado](evidencias/APK-firmado.png)
 
-**Llave de firma digital:**
+**Llave JKS**
 
 ![Llave JKS](evidencias/Llave-jks.png)
 
-### Evidencias de pruebas
+## Organización del trabajo
 
-[Resultados de pruebas y cobertura](evidencias/EvidenciasPruebas.docx)
+El repositorio registra el historial de cambios del proyecto. La captura de Trello documenta el estado de las tareas al cierre del desarrollo.
 
+![Tablero Trello](evidencias/trello.png)
+
+## Alcance
+
+Proyecto académico con datos ficticios. Los servicios se ejecutan localmente y no se conectan a Gestioo. No incluye registro dinámico de usuarios, aislamiento de datos entre clientes reales ni sincronización de escrituras offline. No utilizar datos personales reales ni desplegar las credenciales de demostración en producción.
