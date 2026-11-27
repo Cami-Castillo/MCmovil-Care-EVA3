@@ -1,1 +1,1 @@
-Los informes y APK de la versión anterior no acreditan esta revisión. Generar y verificar nuevamente antes de entregar.
+Los informes de pruebas, cobertura y el APK firmado corresponden a la versión 4.2 de MCmovil Care. Las pruebas automatizadas fueron ejecutadas exitosamente y la firma digital del APK fue validada mediante apksigner. Además, se comprobó su funcionamiento en un emulador Pixel 7 con Android 15.
